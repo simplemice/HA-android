@@ -4,6 +4,7 @@ import io.homeassistant.companion.android.common.data.LocalStorage
 import io.homeassistant.companion.android.common.data.authentication.AuthenticationRepositoryFactory
 import io.homeassistant.companion.android.common.data.authentication.SessionState
 import io.homeassistant.companion.android.common.data.authentication.impl.AuthenticationRepositoryImpl
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeadersRepository
 import io.homeassistant.companion.android.common.data.integration.IntegrationRepositoryFactory
 import io.homeassistant.companion.android.common.data.integration.impl.IntegrationRepositoryImpl
 import io.homeassistant.companion.android.common.data.prefs.PrefsRepository
@@ -53,6 +54,7 @@ class ServerManagerImplTest {
     private val serverDao: ServerDao = mockk()
     private val sensorRepository: SensorRepository = mockk()
     private val settingsDao: SettingsDao = mockk()
+    private val customHeadersRepository: CustomHeadersRepository = mockk(relaxed = true)
     private val localStorage: LocalStorage = mockk()
 
     private lateinit var serverManager: ServerManagerImpl
@@ -81,6 +83,7 @@ class ServerManagerImplTest {
             serverDao = serverDao,
             sensorRepository = sensorRepository,
             settingsDao = settingsDao,
+            customHeadersRepository = customHeadersRepository,
             localStorage = localStorage,
         )
     }
@@ -357,6 +360,7 @@ class ServerManagerImplTest {
                 webSocketRepo.shutdown()
                 settingsDao.delete(serverId)
                 sensorRepository.removeServer(serverId)
+                customHeadersRepository.removeHeaders(serverId)
                 serverDao.delete(serverId)
             }
         }

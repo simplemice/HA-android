@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.homeassistant.companion.android.common.R as commonR
 import io.homeassistant.companion.android.common.data.connectivity.ConnectivityCheckRepository
 import io.homeassistant.companion.android.common.data.connectivity.ConnectivityCheckState
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeadersRepository
 import io.homeassistant.companion.android.common.data.keychain.KeyChainRepository
 import io.homeassistant.companion.android.common.data.prefs.PrefsRepository
 import io.homeassistant.companion.android.common.data.prefs.ScreenOrientation
@@ -134,6 +135,7 @@ internal class FrontendViewModel @VisibleForTesting constructor(
     private val barcodeScannerHandler: FrontendBarcodeScannerHandler,
     private val matterThreadHandler: FrontendMatterThreadHandler,
     private val keyChainRepository: KeyChainRepository,
+    private val customHeadersRepository: CustomHeadersRepository,
 ) : ViewModel(),
     FrontendConnectionErrorStateProvider {
 
@@ -159,6 +161,7 @@ internal class FrontendViewModel @VisibleForTesting constructor(
         barcodeScannerHandler: FrontendBarcodeScannerHandler,
         matterThreadHandler: FrontendMatterThreadHandler,
         keyChainRepository: KeyChainRepository,
+        customHeadersRepository: CustomHeadersRepository,
     ) : this(
         initialServerId = savedStateHandle.toRoute<FrontendRoute>().serverId,
         initialTarget = savedStateHandle.toRoute<FrontendRoute>().target,
@@ -181,6 +184,7 @@ internal class FrontendViewModel @VisibleForTesting constructor(
         barcodeScannerHandler = barcodeScannerHandler,
         matterThreadHandler = matterThreadHandler,
         keyChainRepository = keyChainRepository,
+        customHeadersRepository = customHeadersRepository,
     )
 
     /**
@@ -348,6 +352,18 @@ internal class FrontendViewModel @VisibleForTesting constructor(
         } catch (e: TimeoutCancellationException) {
             Timber.w(e, "TLS client certificate priming timed out, loading the frontend anyway")
         }
+    }
+
+    /**
+     * Returns the custom HTTP headers to send with the top level navigation to [url] as a name to value map.
+     *
+     * Empty unless [url] has the same origin as a configured server URL, so the headers are never sent to another
+     * website. Subresource requests of the page can't carry them, the frontend relies on the cookie set by the proxy
+     * after the first request.
+     */
+    suspend fun customHeadersFor(url: String): Map<String, String> {
+        val httpUrl = url.toHttpUrlOrNull() ?: return emptyMap()
+        return customHeadersRepository.getHeadersForUrl(httpUrl).associate { it.name to it.value }
     }
 
     /** The current pending file chooser request from the WebView, or null if none. */

@@ -6,6 +6,7 @@ import android.os.Build
 import android.webkit.CookieManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.homeassistant.companion.android.common.BuildConfig
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeadersInterceptor
 import io.homeassistant.companion.android.common.util.kotlinJsonMapper
 import io.homeassistant.companion.android.di.OkHttpConfigurator
 import java.util.concurrent.TimeUnit
@@ -32,6 +33,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 class HomeAssistantApis @Inject constructor(
     private val tlsHelper: TLSHelper,
     @ApplicationContext private val appContext: Context,
+    private val customHeadersInterceptor: CustomHeadersInterceptor,
     private val configurators: Set<@JvmSuppressWildcards OkHttpConfigurator>,
 ) {
     companion object {
@@ -91,6 +93,9 @@ class HomeAssistantApis @Inject constructor(
                     .build(),
             )
         }
+
+        // Must stay a network interceptor so the host is checked on every redirect hop, see CustomHeadersInterceptor.
+        builder.addNetworkInterceptor(customHeadersInterceptor)
 
         val isWear = appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
         if (!isWear) {

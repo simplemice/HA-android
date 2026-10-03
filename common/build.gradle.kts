@@ -62,6 +62,9 @@ dependencies {
         exclude(group = "org.json", module = "json")
     }
 
+    testImplementation(platform(libs.okhttp.bom))
+    testImplementation(libs.okhttp.mockwebserver)
+
     androidTestImplementation(libs.bundles.androidx.test)
     androidTestImplementation(libs.androidx.room.testing)
 

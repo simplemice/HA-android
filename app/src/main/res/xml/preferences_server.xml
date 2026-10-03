@@ -37,6 +37,11 @@
             android:title="@string/pref_connection_internal"
             app:useSimpleSummaryProvider="true"/>
         <Preference
+            android:key="custom_headers"
+            android:icon="@drawable/ic_lock"
+            android:title="@string/custom_headers_title"
+            android:summary="@string/custom_headers_summary"/>
+        <Preference
             android:key="connection_security_level"
             android:icon="@drawable/ic_lock"
             android:title="@string/connection_security_level_title"/>

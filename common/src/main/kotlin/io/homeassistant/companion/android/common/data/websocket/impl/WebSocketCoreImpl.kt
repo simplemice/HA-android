@@ -6,6 +6,8 @@ import io.homeassistant.companion.android.common.data.HomeAssistantApis.Companio
 import io.homeassistant.companion.android.common.data.HomeAssistantApis.Companion.USER_AGENT_STRING
 import io.homeassistant.companion.android.common.data.HomeAssistantVersion
 import io.homeassistant.companion.android.common.data.authentication.AuthorizationException
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeader
+import io.homeassistant.companion.android.common.data.customheaders.applyCustomHeaders
 import io.homeassistant.companion.android.common.data.servers.ServerManager
 import io.homeassistant.companion.android.common.data.servers.UrlState
 import io.homeassistant.companion.android.common.data.websocket.HAWebSocketException
@@ -89,6 +91,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -138,6 +141,8 @@ private val MAX_DELAY_BEFORE_RECONNECT = 2.minutes
  * @param serverId The ID of the server to connect to.
  * @param wsScope The coroutine scope used for WebSocket operations. Defaults to a scope with `Dispatchers.IO`.
  * @param backgroundScope A dedicated scope for background tasks, primarily used for testing.
+ * @param customHeadersProvider Gives the custom HTTP headers to send in the handshake to a given URL. OkHttp does not
+ * run network interceptors for WebSocket handshakes so they can't be added there.
  */
 internal class WebSocketCoreImpl(
     private val okHttpClient: OkHttpClient,
@@ -149,6 +154,7 @@ internal class WebSocketCoreImpl(
     ),
     // We need a dedicated scope in test to control job that are in background
     private val backgroundScope: CoroutineScope = wsScope,
+    private val customHeadersProvider: suspend (HttpUrl) -> List<CustomHeader> = { emptyList() },
 ) : WebSocketListener(),
     WebSocketCore {
 
@@ -459,6 +465,12 @@ internal class WebSocketCoreImpl(
         }
     }
 
+    /** Builds the handshake request and the client to send it with, see [applyCustomHeaders]. */
+    private suspend fun buildHandshake(url: URL): Pair<OkHttpClient, Request> {
+        val request = Request.Builder().url(url.toWebSocketURL()).header(USER_AGENT, USER_AGENT_STRING).build()
+        return applyCustomHeaders(okHttpClient, request, customHeadersProvider(request.url))
+    }
+
     /**
      * Attempts to create a WebSocket connection and send the authentication message.
      *
@@ -468,12 +480,8 @@ internal class WebSocketCoreImpl(
         var webSocket: WebSocket? = null
         try {
             Timber.d("Creating WebSocket connection")
-            webSocket = okHttpClient.newWebSocket(
-                Request.Builder().url(url.toWebSocketURL())
-                    .header(USER_AGENT, USER_AGENT_STRING)
-                    .build(),
-                this@WebSocketCoreImpl,
-            )
+            val (client, request) = buildHandshake(url)
+            webSocket = client.newWebSocket(request, this@WebSocketCoreImpl)
 
             val accessToken = serverManager.authenticationRepository(serverId).retrieveAccessToken()
             val result = webSocket.send(

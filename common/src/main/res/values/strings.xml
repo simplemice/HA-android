@@ -1430,6 +1430,17 @@
     <string name="default_launcher_prompt_def">Open settings to choose your default home app. Currently set to %s.</string>
     <string name="unknown_launcher_label">unknown app</string>
     <string name="open_settings">Open settings</string>
+    <string name="custom_headers_title">Custom HTTP headers</string>
+    <string name="custom_headers_summary">Headers sent with every request to this server, for example for a reverse proxy</string>
+    <string name="custom_headers_description">These headers are only sent to the URLs of this server, never to other websites. Values are stored encrypted and are not displayed after being saved.</string>
+    <string name="custom_headers_add">Add header</string>
+    <string name="custom_headers_remove">Remove header</string>
+    <string name="custom_headers_name">Header name</string>
+    <string name="custom_headers_value">Header value</string>
+    <string name="custom_headers_error_name">Invalid header name</string>
+    <string name="custom_headers_error_reserved">This header is managed by the app and cannot be overridden</string>
+    <string name="custom_headers_error_value">Invalid header value</string>
+    <string name="custom_headers_error_duplicate">Each header name can only be used once</string>
     <string name="connection_security_level_title">Remote connection security level</string>
     <string name="connection_security_level_default_summary">Only connect to the server when we are sure that connection is encrypted or you are at home</string>
     <string name="connection_security_most_secure">Most secure: Allow this app to know when you\'re home</string>

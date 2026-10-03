@@ -17,6 +17,8 @@ import io.homeassistant.companion.android.common.LocalStorageImpl
 import io.homeassistant.companion.android.common.data.HomeAssistantApis
 import io.homeassistant.companion.android.common.data.LocalStorage
 import io.homeassistant.companion.android.common.data.authentication.impl.AuthenticationService
+import io.homeassistant.companion.android.common.data.customheaders.HeaderCipher
+import io.homeassistant.companion.android.common.data.customheaders.KeystoreHeaderCipher
 import io.homeassistant.companion.android.common.data.integration.impl.IntegrationService
 import io.homeassistant.companion.android.common.data.keychain.ClientCertificateManager
 import io.homeassistant.companion.android.common.data.keychain.KeyChainRepository
@@ -33,6 +35,7 @@ import io.homeassistant.companion.android.common.util.di.SuspendProvider
 import io.homeassistant.companion.android.common.util.getSharedPreferencesSuspend
 import io.homeassistant.companion.android.common.util.tts.AndroidTextToSpeechEngine
 import io.homeassistant.companion.android.common.util.tts.TextToSpeechClient
+import io.homeassistant.companion.android.di.qualifiers.NamedCustomHeadersStorage
 import io.homeassistant.companion.android.di.qualifiers.NamedDeviceId
 import io.homeassistant.companion.android.di.qualifiers.NamedInstallId
 import io.homeassistant.companion.android.di.qualifiers.NamedIntegrationStorage
@@ -95,6 +98,13 @@ internal abstract class DataModule {
         @Singleton
         fun provideIntegrationLocalStorage(@ApplicationContext appContext: Context): LocalStorage = LocalStorageImpl {
             appContext.getSharedPreferencesSuspend("integration_0")
+        }
+
+        @Provides
+        @NamedCustomHeadersStorage
+        @Singleton
+        fun provideCustomHeadersLocalStorage(@ApplicationContext appContext: Context): LocalStorage = LocalStorageImpl {
+            appContext.getSharedPreferencesSuspend("custom_headers_0")
         }
 
         @Provides
@@ -183,6 +193,10 @@ internal abstract class DataModule {
     @Binds
     @Singleton
     internal abstract fun bindKeyStoreRepository(keyStoreRepository: KeyStoreRepositoryImpl): KeyStoreRepository
+
+    @Binds
+    @Singleton
+    internal abstract fun bindHeaderCipher(cipher: KeystoreHeaderCipher): HeaderCipher
 
     @Multibinds
     abstract fun bindOkHttpClientConfigurator(): Set<@JvmSuppressWildcards OkHttpConfigurator>

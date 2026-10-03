@@ -31,6 +31,13 @@ annotation class NamedThemesStorage
 annotation class NamedWearStorage
 
 /**
+ * Qualifier for the [LocalStorage] holding the encrypted custom HTTP headers of the servers.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class NamedCustomHeadersStorage
+
+/**
  * Qualifier for a [SuspendProvider<Boolean>] telling whether the pref of the changelog library
  * previously used by the app is present.
  */

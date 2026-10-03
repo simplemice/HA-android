@@ -35,6 +35,7 @@ import io.homeassistant.companion.android.launch.LaunchActivity
 import io.homeassistant.companion.android.launch.intentLaunchWithNavigateTo
 import io.homeassistant.companion.android.settings.ConnectionSecurityLevelFragment
 import io.homeassistant.companion.android.settings.SettingsActivity
+import io.homeassistant.companion.android.settings.customheaders.CustomHeadersFragment
 import io.homeassistant.companion.android.settings.ssid.SsidFragment
 import io.homeassistant.companion.android.settings.url.ExternalUrlFragment
 import io.homeassistant.companion.android.settings.websocket.WebsocketSettingFragment
@@ -179,6 +180,14 @@ class ServerSettingsFragment :
                 return@setOnPreferenceClickListener true
             }
             it.isVisible = presenter.hasWifi()
+        }
+
+        findPreference<Preference>("custom_headers")?.setOnPreferenceClickListener {
+            parentFragmentManager.commit {
+                replace(R.id.content_full_screen, CustomHeadersFragment.newInstance(serverId))
+                addToBackStack(null)
+            }
+            true
         }
 
         findPreference<Preference>("connection_security_level")?.let {

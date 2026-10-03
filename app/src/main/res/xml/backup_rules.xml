@@ -3,4 +3,5 @@
     <include domain="database" path="." />
     <include domain="sharedpref" path="." />
     <exclude domain="sharedpref" path="session_0.xml" />
+    <exclude domain="sharedpref" path="custom_headers_0.xml" />
 </full-backup-content>

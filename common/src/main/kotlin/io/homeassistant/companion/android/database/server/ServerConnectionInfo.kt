@@ -141,6 +141,13 @@ data class ServerConnectionInfo(
     val canUseCloud: Boolean = !cloudUrl.isNullOrBlank()
 
     /**
+     * Checks if custom HTTP headers can be sent to [url]: only the external and internal URLs the user configured
+     * qualify. The cloud URLs are managed by Home Assistant Cloud and never receive the user's headers.
+     */
+    internal fun isCustomHeadersUrl(url: HttpUrl): Boolean =
+        listOfNotNull(externalHttpUrl, internalHttpUrl).any { url.hasSameOrigin(it) }
+
+    /**
      * Checks if the given URL belongs to this server by matching against configured URLs.
      *
      * Compares scheme, host, and port to determine if the URL belongs to one of the server's

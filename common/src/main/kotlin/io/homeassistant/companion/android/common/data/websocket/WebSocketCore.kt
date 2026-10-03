@@ -1,5 +1,6 @@
 package io.homeassistant.companion.android.common.data.websocket
 
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeadersRepository
 import io.homeassistant.companion.android.common.data.servers.ServerManager
 import io.homeassistant.companion.android.common.data.websocket.impl.WebSocketCoreImpl
 import io.homeassistant.companion.android.common.data.websocket.impl.entities.RawMessageSocketResponse
@@ -89,10 +90,16 @@ internal class WebSocketCoreFactory @Inject constructor(
     private val okHttpClientProvider: SuspendProvider<OkHttpClient>,
     // Use a Provider to avoid a dependency circle since serverManager needs the factory
     private val serverManagerProvider: Provider<ServerManager>,
+    private val customHeadersRepository: CustomHeadersRepository,
 ) {
 
     suspend fun create(serverId: Int): WebSocketCore {
-        return WebSocketCoreImpl(okHttpClientProvider(), serverManagerProvider.get(), serverId)
+        return WebSocketCoreImpl(
+            okHttpClient = okHttpClientProvider(),
+            serverManager = serverManagerProvider.get(),
+            serverId = serverId,
+            customHeadersProvider = customHeadersRepository::getHeadersForUrl,
+        )
     }
 }
 

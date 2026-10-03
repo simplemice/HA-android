@@ -178,6 +178,7 @@ internal fun FrontendScreen(
         errorStateProvider = viewModel as FrontendConnectionErrorStateProvider,
         getWebViewClient = viewModel::getWebViewClient,
         prepareUrlLoad = viewModel::prepareUrlLoad,
+        getCustomHeaders = viewModel::customHeadersFor,
         webChromeClient = webChromeClient,
         customView = customView,
         frontendJsCallback = viewModel.frontendJsCallback,
@@ -263,6 +264,7 @@ internal fun FrontendScreenContent(
     improvScanRequested: Boolean = false,
     processImprovScanRequests: suspend () -> Unit = {},
     prepareUrlLoad: suspend (String) -> Unit = {},
+    getCustomHeaders: suspend (String) -> Map<String, String> = { emptyMap() },
 ) {
     var webView by remember { mutableStateOf<WebView?>(null) }
     val content = (viewState as? FrontendViewState.Content)
@@ -279,6 +281,7 @@ internal fun FrontendScreenContent(
         url = viewState.url,
         getWebViewClient = getWebViewClient,
         prepareUrlLoad = prepareUrlLoad,
+        getCustomHeaders = getCustomHeaders,
         frontendJsCallback = frontendJsCallback,
         webViewActions = webViewActions,
         pendingFileChooser = pendingFileChooser,
@@ -364,6 +367,7 @@ private fun FrontendScreenEffects(
     url: String,
     getWebViewClient: suspend () -> WebViewClient,
     prepareUrlLoad: suspend (String) -> Unit,
+    getCustomHeaders: suspend (String) -> Map<String, String>,
     frontendJsCallback: FrontendJsCallback,
     webViewActions: Flow<WebViewAction>,
     pendingFileChooser: FileChooserRequest?,
@@ -397,6 +401,7 @@ private fun FrontendScreenEffects(
         url = url,
         getWebViewClient = getWebViewClient,
         prepareUrlLoad = prepareUrlLoad,
+        getCustomHeaders = getCustomHeaders,
         frontendJsCallback = frontendJsCallback,
         webViewActions = webViewActions,
         autoPlayVideoEnabled = autoPlayVideoEnabled,
@@ -737,6 +742,7 @@ private fun WebViewEffects(
     url: String,
     getWebViewClient: suspend () -> WebViewClient,
     prepareUrlLoad: suspend (String) -> Unit,
+    getCustomHeaders: suspend (String) -> Map<String, String>,
     frontendJsCallback: FrontendJsCallback,
     webViewActions: Flow<WebViewAction>,
     autoPlayVideoEnabled: Boolean,
@@ -749,7 +755,7 @@ private fun WebViewEffects(
             // FrontendViewModel.prepareUrlLoad.
             prepareUrlLoad(url)
             Timber.v("Load url ${sensitive(url)}")
-            webView.loadUrl(url)
+            webView.loadUrl(url, getCustomHeaders(url))
         }
         DisposableEffect(webView) {
             onDispose {

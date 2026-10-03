@@ -17,6 +17,8 @@ import io.homeassistant.companion.android.common.data.HomeAssistantVersion
 import io.homeassistant.companion.android.common.data.connectivity.ConnectivityCheckRepository
 import io.homeassistant.companion.android.common.data.connectivity.ConnectivityCheckResult
 import io.homeassistant.companion.android.common.data.connectivity.ConnectivityCheckState
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeader
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeadersRepository
 import io.homeassistant.companion.android.common.data.integration.IntegrationRepository
 import io.homeassistant.companion.android.common.data.keychain.ClientCertProvider
 import io.homeassistant.companion.android.common.data.keychain.ClientCertificate
@@ -117,6 +119,7 @@ class FrontendViewModelTest {
     private val gestureManager: FrontendGestureManager = mockk(relaxed = true)
     private val serverManager: ServerManager = mockk(relaxed = true)
     private val keyChainRepository: KeyChainRepository = mockk(relaxed = true)
+    private val customHeadersRepository: CustomHeadersRepository = mockk(relaxed = true)
     private val zoomSettingsFlow = MutableStateFlow(ZoomSettings())
     private val autoPlayVideoFlow = MutableStateFlow(false)
     private val screenOrientationFlow = MutableStateFlow(ScreenOrientation.SYSTEM)
@@ -191,6 +194,7 @@ class FrontendViewModelTest {
             barcodeScannerHandler = FrontendBarcodeScannerHandler(externalBusRepository, dialogManager),
             matterThreadHandler = matterThreadHandler,
             keyChainRepository = keyChainRepository,
+            customHeadersRepository = customHeadersRepository,
         )
     }
 
@@ -3250,6 +3254,33 @@ class FrontendViewModelTest {
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+    }
+
+    @Nested
+    inner class CustomHeadersForWebView {
+        @Test
+        fun `Given headers configured for the url when customHeadersFor then they are returned as map`() = runTest {
+            coEvery { customHeadersRepository.getHeadersForUrl(any()) } returns listOf(CustomHeader("X-Test", "v"))
+            val viewModel = createViewModel()
+
+            assertEquals(mapOf("X-Test" to "v"), viewModel.customHeadersFor("https://example.com/?external_auth=1"))
+        }
+
+        @Test
+        fun `Given no header for the url when customHeadersFor then empty so other websites get nothing`() = runTest {
+            coEvery { customHeadersRepository.getHeadersForUrl(any()) } returns emptyList()
+            val viewModel = createViewModel()
+
+            assertEquals(emptyMap<String, String>(), viewModel.customHeadersFor("https://other.example.org/"))
+        }
+
+        @Test
+        fun `Given an invalid url when customHeadersFor then empty and repository is not queried`() = runTest {
+            val viewModel = createViewModel()
+
+            assertEquals(emptyMap<String, String>(), viewModel.customHeadersFor("not a url"))
+            coVerify(exactly = 0) { customHeadersRepository.getHeadersForUrl(any()) }
         }
     }
 

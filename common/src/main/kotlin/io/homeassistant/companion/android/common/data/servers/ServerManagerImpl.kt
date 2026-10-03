@@ -4,6 +4,7 @@ import io.homeassistant.companion.android.common.data.LocalStorage
 import io.homeassistant.companion.android.common.data.authentication.AuthenticationRepository
 import io.homeassistant.companion.android.common.data.authentication.AuthenticationRepositoryFactory
 import io.homeassistant.companion.android.common.data.authentication.SessionState
+import io.homeassistant.companion.android.common.data.customheaders.CustomHeadersRepository
 import io.homeassistant.companion.android.common.data.integration.IntegrationRepository
 import io.homeassistant.companion.android.common.data.integration.IntegrationRepositoryFactory
 import io.homeassistant.companion.android.common.data.prefs.PrefsRepository
@@ -75,6 +76,7 @@ internal class ServerManagerImpl @Inject constructor(
     private val serverDao: ServerDao,
     private val sensorRepository: SensorRepository,
     private val settingsDao: SettingsDao,
+    private val customHeadersRepository: CustomHeadersRepository,
     @NamedSessionStorage private val localStorage: LocalStorage,
 ) : ServerManager {
 
@@ -143,6 +145,7 @@ internal class ServerManagerImpl @Inject constructor(
         if (localStorage.getInt(PREF_ACTIVE_SERVER) == id) localStorage.remove(PREF_ACTIVE_SERVER)
         settingsDao.delete(id)
         sensorRepository.removeServer(id)
+        customHeadersRepository.removeHeaders(id)
         serverDao.delete(id)
     }
 
